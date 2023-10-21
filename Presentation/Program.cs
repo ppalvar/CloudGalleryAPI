@@ -1,9 +1,36 @@
+using Application.ExternalServices.Interfaces;
+using Application.Pipelines;
+using Application.Services.Interfaces;
+using Infraestructure.DbContexts;
+using Infraestructure.ExternalServices.Local;
+using Infraestructure.ExternalServices.Mocks;
+using Infraestructure.Services;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddDbContext<CloudGalleryDbContext>(
+    opt => opt.UseMySQL(builder.Configuration.GetConnectionString("MySql")!,
+    opt => opt.MigrationsAssembly(nameof(Presentation)))
+);
+
+builder.Services.AddAutoMapper(
+    AppDomain.CurrentDomain.GetAssemblies()
+);
+
+{
+    builder.Services.AddScoped<IVirusScannerService, VirusScannerServiceMock>();
+    builder.Services.AddScoped<IThumbnailGenerationService, ThumbnailGeneratorServiceMock>();
+    builder.Services.AddScoped<IFileEncryptService, FileEncryptServiceMock>();
+    builder.Services.AddScoped<IPhotoStorageService, PhotoStorageServiceLocal>();
+}
+
+builder.Services.AddScoped<PhotoProcessingPipeline>();
+
+builder.Services.AddScoped<IPhotoService, PhotoService>();
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
