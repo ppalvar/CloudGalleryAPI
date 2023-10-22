@@ -1,4 +1,4 @@
-namespace Contracts.Dtos.Common;
+namespace Presentation.Dtos.Common;
 
 public class SimpleResponse<ItemType>
 {

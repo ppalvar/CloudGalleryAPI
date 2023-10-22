@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Http;
 
-namespace Contracts.Dtos.Gallery;
+namespace Presentation.Dtos.Gallery;
 
 public class PhotoUploadRequest
 {

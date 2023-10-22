@@ -3,8 +3,8 @@ namespace Presentation.Controllers;
 using Application.Models;
 using Application.Services.Interfaces;
 using AutoMapper;
-using Contracts.Dtos.Common;
-using Contracts.Dtos.Gallery;
+using Presentation.Dtos.Common;
+using Presentation.Dtos.Gallery;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

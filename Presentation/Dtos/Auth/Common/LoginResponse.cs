@@ -1,4 +1,4 @@
-namespace Contracts.Dtos.Auth.Common;
+namespace Presentation.Dtos.Auth.Common;
 
 public class LoginResponse
 {

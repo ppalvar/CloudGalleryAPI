@@ -1,4 +1,4 @@
-namespace Contracts.Dtos.Auth;
+namespace Presentation.Dtos.Auth;
 
 public class PasswordChangeRequest
 {

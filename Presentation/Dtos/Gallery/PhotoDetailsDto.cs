@@ -1,4 +1,4 @@
-namespace Contracts.Dtos.Gallery;
+namespace Presentation.Dtos.Gallery;
 
 public class PhotoDetailDto
 {

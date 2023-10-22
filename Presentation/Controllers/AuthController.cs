@@ -3,9 +3,9 @@ namespace Presentation.Controllers;
 using Application.Models;
 using Application.Services.Interfaces;
 using AutoMapper;
-using Contracts.Dtos.Auth;
-using Contracts.Dtos.Auth.Common;
-using Contracts.Dtos.Common;
+using Presentation.Dtos.Auth;
+using Presentation.Dtos.Auth.Common;
+using Presentation.Dtos.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

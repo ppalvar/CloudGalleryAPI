@@ -2,7 +2,7 @@ namespace Presentation.MappingProfiles;
 
 using Application.Models;
 using AutoMapper;
-using Contracts.Dtos.Gallery;
+using Presentation.Dtos.Gallery;
 
 public class PhotoMappingProfile : Profile {
     public PhotoMappingProfile()

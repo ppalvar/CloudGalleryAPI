@@ -2,7 +2,7 @@ namespace Presentation.MappingProfiles;
 
 using AutoMapper;
 using Application.Models;
-using Contracts.Dtos.Auth;
+using Presentation.Dtos.Auth;
 
 public class UserMappingProfile : Profile
 {
