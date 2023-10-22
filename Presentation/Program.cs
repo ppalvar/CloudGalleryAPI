@@ -5,7 +5,9 @@ using Infraestructure.DbContexts;
 using Infraestructure.ExternalServices.Local;
 using Infraestructure.ExternalServices.Mocks;
 using Infraestructure.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,19 +22,50 @@ builder.Services.AddAutoMapper(
     AppDomain.CurrentDomain.GetAssemblies()
 );
 
+//Add Photo processing pipeline
 {
     builder.Services.AddScoped<IVirusScannerService, VirusScannerServiceMock>();
     builder.Services.AddScoped<IThumbnailGenerationService, ThumbnailGeneratorServiceMock>();
     builder.Services.AddScoped<IFileEncryptService, FileEncryptServiceMock>();
     builder.Services.AddScoped<IPhotoStorageService, PhotoStorageServiceLocal>();
+
+    builder.Services.AddScoped<PhotoProcessingPipeline>();
 }
 
-builder.Services.AddScoped<PhotoProcessingPipeline>();
+//Add services
+{
+    builder.Services.AddScoped<IPhotoService, PhotoService>();
+    builder.Services.AddScoped<IAuthService, AuthService>();
 
-builder.Services.AddScoped<IPhotoService, PhotoService>();
+    builder.Services.AddSingleton(builder.Configuration);
+}
 
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+//Add JWT auth
+builder.Services.AddAuthentication(opt =>
+{
+    opt.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    opt.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+    opt.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(opt =>
+{
+    opt.SaveToken = true;
+    opt.RequireHttpsMetadata = true;
+    opt.TokenValidationParameters = new TokenValidationParameters()
+    {
+        ValidateIssuer = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidateAudience = true,
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Secret"]))
+    };
+});
+
+//Add swagger
+{
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen();
+}
 
 var app = builder.Build();
 
@@ -45,6 +78,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.MapControllers();
+
 app.UseAuthentication();
 app.UseAuthorization();
+
 app.Run();
