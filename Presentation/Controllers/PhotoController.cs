@@ -7,6 +7,7 @@ using Presentation.Dtos.Common;
 using Presentation.Dtos.Gallery;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Presentation.Validators;
 
 [ApiController, Route("photos")]
 public class PhotoController : ControllerBase
@@ -14,12 +15,14 @@ public class PhotoController : ControllerBase
     private readonly IPhotoService photoService;
     private readonly IAuthService authService;
     private readonly IMapper mapper;
+    private readonly PhotoUploadValidator validationRules;
 
-    public PhotoController(IPhotoService photoService, IMapper mapper, IAuthService authService)
+    public PhotoController(IPhotoService photoService, IMapper mapper, IAuthService authService, PhotoUploadValidator validationRules)
     {
         this.photoService = photoService;
         this.mapper = mapper;
         this.authService = authService;
+        this.validationRules = validationRules;
     }
 
     [HttpGet]
@@ -82,10 +85,8 @@ public class PhotoController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<StatusResponse>> PostPhoto([FromForm] PhotoUploadRequest request)
     {
-        if (request.File.Length == 0)
-        {
-            return BadRequest(StatusResponse.Error("Not File Attached."));
-        }
+        var result = await validationRules.ValidateAsync(request);
+        if (!result.IsValid) return BadRequest(StatusResponse.Error(result.Errors[0].ErrorMessage));
 
         var photo = mapper.Map<PhotoUploadRequest, Photo>(request);
         var stream = new MemoryStream();

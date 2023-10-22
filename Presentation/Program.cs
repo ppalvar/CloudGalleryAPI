@@ -1,6 +1,8 @@
 using Application.ExternalServices.Interfaces;
 using Application.Pipelines;
 using Application.Services.Interfaces;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Infraestructure.DbContexts;
 using Infraestructure.ExternalServices.Local;
 using Infraestructure.ExternalServices.Mocks;
@@ -9,6 +11,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Presentation.Validators;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +25,10 @@ builder.Services.AddDbContext<CloudGalleryDbContext>(
 builder.Services.AddAutoMapper(
     AppDomain.CurrentDomain.GetAssemblies()
 );
+
+builder.Services.AddValidatorsFromAssemblyContaining<IValidatorMarker>();
+builder.Services.AddScoped<PhotoUploadValidator>();
+builder.Services.AddScoped<UserRegisterValidator>();
 
 //Add Photo processing pipeline
 {

@@ -8,6 +8,7 @@ using Presentation.Dtos.Auth.Common;
 using Presentation.Dtos.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Presentation.Validators;
 
 [ApiController, Route("auth")]
 public class AuthController : ControllerBase
@@ -15,12 +16,14 @@ public class AuthController : ControllerBase
     private readonly IAuthService authService;
     private readonly IMapper mapper;
     private readonly ConfigurationManager _config;
+    private readonly UserRegisterValidator validationRules;
 
-    public AuthController(IAuthService authService, IMapper mapper, ConfigurationManager config)
+    public AuthController(IAuthService authService, IMapper mapper, ConfigurationManager config, UserRegisterValidator validationRules)
     {
         this.authService = authService;
         this.mapper = mapper;
         _config = config;
+        this.validationRules = validationRules;
     }
 
     [HttpPost("login")]
@@ -46,14 +49,15 @@ public class AuthController : ControllerBase
     [HttpPost("register")]
     public async Task<ActionResult<StatusResponse>> Register(UserRegisterRequest request)
     {
+        //only the first error encountered will be displayed to the user
+        var result = await validationRules.ValidateAsync(request);
+        if (!result.IsValid) return BadRequest(StatusResponse.Error(result.Errors[0].ErrorMessage));
+
         var user = mapper.Map<UserRegisterRequest, User>(request);
 
         bool success = await authService.RegisterUserAsync(user, request.Password);
+        if (!success) return BadRequest(StatusResponse.Error("Couldn't create user."));
 
-        if (!success)
-        {
-            return BadRequest(StatusResponse.Error("Couldn't create user."));
-        }
         return Ok(StatusResponse.Success("User registered successfully."));
     }
 
