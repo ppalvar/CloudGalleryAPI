@@ -45,13 +45,7 @@ public class PhotoController : ControllerBase
         }
         catch (Exception e)
         {
-            return BadRequest(
-                new StatusResponse
-                {
-                    Status = "Error",
-                    Message = e.Message
-                }
-            );
+            return BadRequest(StatusResponse.Error(e.Message));
         }
     }
 
@@ -67,13 +61,7 @@ public class PhotoController : ControllerBase
         }
         catch (Exception e)
         {
-            return BadRequest(
-                new StatusResponse
-                {
-                    Status = "Error",
-                    Message = e.Message
-                }
-            );
+            return BadRequest(StatusResponse.Error(e.Message));
         }
     }
 
@@ -84,13 +72,7 @@ public class PhotoController : ControllerBase
 
         if (photoInfo is null)
         {
-            return NotFound(
-                new StatusResponse
-                {
-                    Status = "Error",
-                    Message = $"Photo with id {id} was not found."
-                }
-            );
+            return NotFound(StatusResponse.Error($"Photo with id {id} was not found."));
         }
 
         return mapper.Map<Photo, PhotoDetailDto>(photoInfo);
@@ -102,11 +84,7 @@ public class PhotoController : ControllerBase
     {
         if (request.File.Length == 0)
         {
-            return BadRequest(new StatusResponse
-            {
-                Status = "Error",
-                Message = "Not File Attached"
-            });
+            return BadRequest(StatusResponse.Error("Not File Attached."));
         }
 
         var photo = mapper.Map<PhotoUploadRequest, Photo>(request);
@@ -122,22 +100,14 @@ public class PhotoController : ControllerBase
         //User object to use it as owner of the uploaded photo
         if (_user is null || _user.Name is null || await authService.GetUserByUsernameAsync(_user.Name) is not User user)
         {
-            return BadRequest(new StatusResponse
-            {
-                Status = "Error",
-                Message = "Not user executing this operation."
-            });
+            return BadRequest(StatusResponse.Error("Not user executing this operation."));
         }
 
         photo.Owner = user;
 
         await photoService.UploadPhotoAsync(photo, stream.ToArray());
 
-        return Ok(new StatusResponse
-        {
-            Status = "Success",
-            Message = "Created successfully"
-        });
+        return Ok(StatusResponse.Success("Created successfully."));
     }
 
     [Authorize]
@@ -150,11 +120,7 @@ public class PhotoController : ControllerBase
         //User object to use it as owner of the uploaded photo
         if (_user is null || _user.Name is null || await authService.GetUserByUsernameAsync(_user.Name) is not User user)
         {
-            return BadRequest(new StatusResponse
-            {
-                Status = "Error",
-                Message = "Not user executing this operation."
-            });
+            return BadRequest(StatusResponse.Error("Not user executing this operation."));
         }
 
         var photo = await photoService.GetPhotoByIdAsync(id);
@@ -162,37 +128,15 @@ public class PhotoController : ControllerBase
         if (photo != null && photo.Owner == user)
         {
             bool success = await photoService.DeletePhotoByIdAsync(id);
-
-            if (success)
-            {
-                return Ok(
-                    new StatusResponse
-                    {
-                        Status = "Success",
-                        Message = "The photo was deleted successfully."
-                    }
-                );
-            }
-
+            if (success) return Ok(StatusResponse.Success("The photo was deleted successfully."));
         }
         else
         {
-            return BadRequest(
-                new StatusResponse
-                {
-                    Status = "Error",
-                    Message = $"The image does not belong to {user.Username} so they cannot delete it."
-                }
-            );
+            return BadRequest(StatusResponse.Error($"The image does not belong to {user.Username} so they cannot delete it."));
         }
 
 
         return NotFound(
-            new StatusResponse
-            {
-                Status = "Error",
-                Message = $"The image with id {id} was not found."
-            }
-        );
+            StatusResponse.Error($"The image with id {id} was not found."));
     }
 }

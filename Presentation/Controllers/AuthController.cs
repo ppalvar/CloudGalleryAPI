@@ -27,46 +27,19 @@ public class AuthController : ControllerBase
     public async Task<ActionResult> Login(UserLoginRequest request)
     {
         var user = await authService.GetUserByUsernameAsync(request.UserName);
-
-        if (user is null)
-        {
-            return NotFound(
-                new StatusResponse
-                {
-                    Status = "Error",
-                    Message = "User does not exists"
-                }
-            );
-        }
+        if (user is null) return NotFound(StatusResponse.Error("User does not exists."));
 
         bool isPasswordCorrect = await authService.CheckPasswordAsync(user, request.Password);
-
-        if (!isPasswordCorrect)
-        {
-            return BadRequest(
-                new StatusResponse
-                {
-                    Status = "Error",
-                    Message = "Wrong password"
-                }
-            );
-        }
+        if (!isPasswordCorrect) return BadRequest(StatusResponse.Error("Wrong password."));
 
         var expiration = DateTime.Now.AddMinutes(30);
-
         var token = await authService.GetNewJsonWebTokenAsync(user: user,
                                                               issuer: _config["Jwt:Issuer"],
                                                               audience: _config["Jwt:Audience"],
                                                               expiration: expiration,
                                                               secretKey: _config["Jwt:Secret"]);
 
-        return Ok(
-            new LoginResponse
-            {
-                Token = token,
-                TokenExpiration = expiration
-            }
-        );
+        return Ok(new LoginResponse(token, expiration));
     }
 
 
@@ -79,39 +52,26 @@ public class AuthController : ControllerBase
 
         if (!success)
         {
-            return BadRequest(
-                new StatusResponse
-                {
-                    Status = "Error",
-                    Message = "Couldn't create user"
-                }
-            );
+            return BadRequest(StatusResponse.Error("Couldn't create user."));
         }
-        return Ok(
-            new StatusResponse
-            {
-                Status = "Success",
-                Message = "User registered successfully."
-            }
-        );
+        return Ok(StatusResponse.Success("User registered successfully."));
     }
 
     [Authorize]
     [HttpPost("password-change")]
-    public async Task<ActionResult> PasswordChange(PasswordChangeRequest request)
+    public async Task<ActionResult<StatusResponse>> PasswordChange(PasswordChangeRequest request)
     {
         var _user = this.User.Identity;
-
         if (_user is null || _user.Name is null) return Forbid();
 
         var user = await authService.GetUserByUsernameAsync(_user.Name);
-
-        if (user is null) return NotFound();
+        if (user is null) return NotFound(StatusResponse.Error("User Not Found"));
 
         if (!await authService.CheckPasswordAsync(user, request.OldPassword)) return Forbid();
 
         await authService.ChangePasswordAsync(user, request.NewPassword);
 
-        return Ok();
+
+        return Ok(StatusResponse.Success("Password changed successfully"));
     }
 }
