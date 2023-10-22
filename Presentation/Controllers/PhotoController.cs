@@ -5,24 +5,27 @@ using Application.Services.Interfaces;
 using AutoMapper;
 using Contracts.Dtos.Common;
 using Contracts.Dtos.Gallery;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController, Route("photos")]
 public class PhotoController : ControllerBase
 {
-    private readonly IPhotoService service;
+    private readonly IPhotoService photoService;
+    private readonly IAuthService authService;
     private readonly IMapper mapper;
 
-    public PhotoController(IPhotoService service, IMapper mapper)
+    public PhotoController(IPhotoService photoService, IMapper mapper, IAuthService authService)
     {
-        this.service = service;
+        this.photoService = photoService;
         this.mapper = mapper;
+        this.authService = authService;
     }
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<PhotoInfoDto>>> GetPhotos()
     {
-        IEnumerable<Photo> photos = await service.GetPhotosAsync();
+        IEnumerable<Photo> photos = await photoService.GetPhotosAsync();
 
         return Ok(
             mapper.Map<IEnumerable<Photo>, IEnumerable<PhotoInfoDto>>(photos)
@@ -35,8 +38,8 @@ public class PhotoController : ControllerBase
     {
         try
         {
-            var thumbnail = await service.GetPhotoFileByIdAsync(id, true);
-            var photoInfo = await service.GetPhotoByIdAsync(id);
+            var thumbnail = await photoService.GetPhotoFileByIdAsync(id, true);
+            var photoInfo = await photoService.GetPhotoByIdAsync(id);
 
             return File(thumbnail, photoInfo!.Format);
         }
@@ -57,8 +60,8 @@ public class PhotoController : ControllerBase
     {
         try
         {
-            var photoFile = await service.GetPhotoFileByIdAsync(id);
-            var photoInfo = await service.GetPhotoByIdAsync(id);
+            var photoFile = await photoService.GetPhotoFileByIdAsync(id);
+            var photoInfo = await photoService.GetPhotoByIdAsync(id);
 
             return File(photoFile, photoInfo!.Format);
         }
@@ -77,7 +80,7 @@ public class PhotoController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<PhotoDetailDto>> GetDetails(int id)
     {
-        var photoInfo = await service.GetPhotoByIdAsync(id);
+        var photoInfo = await photoService.GetPhotoByIdAsync(id);
 
         if (photoInfo is null)
         {
@@ -93,12 +96,13 @@ public class PhotoController : ControllerBase
         return mapper.Map<Photo, PhotoDetailDto>(photoInfo);
     }
 
+    [Authorize]
     [HttpPost]
     public async Task<ActionResult<StatusResponse>> PostPhoto([FromForm] PhotoUploadRequest request)
     {
         if (request.File.Length == 0)
         {
-            return Ok(new StatusResponse
+            return BadRequest(new StatusResponse
             {
                 Status = "Error",
                 Message = "Not File Attached"
@@ -112,8 +116,22 @@ public class PhotoController : ControllerBase
 
         photo.Format = request.File.ContentType;
 
+        var _user = this.User.Identity;
 
-        await service.UploadPhotoAsync(photo, stream.ToArray());
+        //this line checks if the name exists, then stores in 'user' the 
+        //User object to use it as owner of the uploaded photo
+        if (_user is null || _user.Name is null || await authService.GetUserByUsernameAsync(_user.Name) is not User user)
+        {
+            return BadRequest(new StatusResponse
+            {
+                Status = "Error",
+                Message = "Not user executing this operation."
+            });
+        }
+
+        photo.Owner = user;
+
+        await photoService.UploadPhotoAsync(photo, stream.ToArray());
 
         return Ok(new StatusResponse
         {
@@ -122,21 +140,52 @@ public class PhotoController : ControllerBase
         });
     }
 
+    [Authorize]
     [HttpDelete("{id}")]
     public async Task<ActionResult<StatusResponse>> DeletePhoto(int id)
     {
-        bool success = await service.DeletePhotoByIdAsync(id);
+        var _user = this.User.Identity;
 
-        if (success)
+        //this line checks if the name exists, then stores in 'user' the 
+        //User object to use it as owner of the uploaded photo
+        if (_user is null || _user.Name is null || await authService.GetUserByUsernameAsync(_user.Name) is not User user)
         {
-            return Ok(
+            return BadRequest(new StatusResponse
+            {
+                Status = "Error",
+                Message = "Not user executing this operation."
+            });
+        }
+
+        var photo = await photoService.GetPhotoByIdAsync(id);
+
+        if (photo != null && photo.Owner == user)
+        {
+            bool success = await photoService.DeletePhotoByIdAsync(id);
+
+            if (success)
+            {
+                return Ok(
+                    new StatusResponse
+                    {
+                        Status = "Success",
+                        Message = "The photo was deleted successfully."
+                    }
+                );
+            }
+
+        }
+        else
+        {
+            return BadRequest(
                 new StatusResponse
                 {
-                    Status = "Success",
-                    Message = "The photo was deleted successfully."
+                    Status = "Error",
+                    Message = $"The image does not belong to {user.Username} so they cannot delete it."
                 }
             );
         }
+
 
         return NotFound(
             new StatusResponse
