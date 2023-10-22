@@ -61,7 +61,7 @@ public class PhotoController : ControllerBase
         }
         catch (Exception e)
         {
-            return BadRequest(StatusResponse.Error(e.Message));
+            return NotFound(StatusResponse.Error(e.Message));
         }
     }
 
