@@ -1,0 +1,27 @@
+version: "3.9"
+
+services:
+  webapi:
+    build: .
+    depends_on:
+      - database
+    restart: always
+    ports: 
+      - 5000:80
+    links:
+      - database
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+    volumes:
+      - ./images:/app/cloud-gallery-photos
+
+  database:
+    image: postgres:16
+    restart: always
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=cloud_gallery_db
+    volumes:
+      - ./db-dump:/var/lib/postgresql/data

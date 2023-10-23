@@ -105,11 +105,24 @@ builder.Services.AddAuthentication(opt =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+//this allows to use swagger in prod environment, use wisely :3
+bool keepSwagger = true;
+if (app.Environment.IsDevelopment() || keepSwagger)
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+}
+
+if (app.Environment.IsProduction()) {
+    try {
+        using var serviceScope = app.Services.CreateScope();
+        var services = serviceScope.ServiceProvider;
+        var dbContext = services.GetRequiredService<CloudGalleryDbContext>();
+        dbContext.Database.Migrate();
+    }
+    catch (Exception e){
+        app.Logger.LogError(e.Message);
+    }
 }
 
 app.UseHttpsRedirection();
