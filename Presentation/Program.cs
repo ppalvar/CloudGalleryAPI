@@ -2,7 +2,6 @@ using Application.ExternalServices.Interfaces;
 using Application.Pipelines;
 using Application.Services.Interfaces;
 using FluentValidation;
-using FluentValidation.AspNetCore;
 using Infraestructure.DbContexts;
 using Infraestructure.ExternalServices.Local;
 using Infraestructure.ExternalServices.Mocks;
@@ -18,7 +17,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 
 builder.Services.AddDbContext<CloudGalleryDbContext>(
-    opt => opt.UseMySQL(builder.Configuration.GetConnectionString("MySql")!,
+    opt => opt.UseNpgsql(builder.Configuration.GetConnectionString("PostgresDB")!,
     opt => opt.MigrationsAssembly(nameof(Presentation)))
 );
 

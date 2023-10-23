@@ -455,3 +455,5 @@ $RECYCLE.BIN/
 
 */cloud-gallery-photos/*
 Migrations
+out
+db-dump
