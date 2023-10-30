@@ -7,4 +7,5 @@ public class PhotoDetailDto
     public string? PhotoFormat { get; set; } = null!;
     public int PhotoHeight { get; set; }
     public int PhotoWidth { get; set; }
+    public string OwnerName { get; set; } = null!;
 }

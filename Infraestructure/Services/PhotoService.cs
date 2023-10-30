@@ -37,7 +37,11 @@ public class PhotoService : IPhotoService
 
     public async Task<Photo?> GetPhotoByIdAsync(long Id)
     {
-        return await dbContext.Photos.FindAsync(Id);
+        return await dbContext.Photos
+                     .Include(photo => photo.Owner)
+                     .Where(photo => photo.Id == Id)
+                     .FirstOrDefaultAsync();
+
     }
 
     public async Task<byte[]> GetPhotoFileByIdAsync(long Id, bool isThumbnail = false)
@@ -62,7 +66,7 @@ public class PhotoService : IPhotoService
 
     public async Task<IEnumerable<Photo>> GetPhotosAsync()
     {
-        return await dbContext.Photos.ToListAsync();
+        return await dbContext.Photos.Include(photo => photo.Owner).ToListAsync();
     }
 
     public async Task<byte[]> GetPhotoThumbnailByIdAsync(long Id)

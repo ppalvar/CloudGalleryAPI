@@ -15,6 +15,10 @@ public class PhotoMappingProfile : Profile {
             .ForMember(
                 dest => dest.Title,
                 opt => opt.MapFrom(src => src.Title)
+            )
+            .ForMember(
+                dest => dest.OwnerName,
+                opt => opt.MapFrom(src => src.Owner.Username)
             );
         
         CreateMap<Photo, PhotoDetailDto>()
@@ -37,6 +41,10 @@ public class PhotoMappingProfile : Profile {
             .ForMember(
                 dest => dest.PhotoWidth,
                 opt => opt.MapFrom(src => src.Width)
+            )
+            .ForMember(
+                dest => dest.OwnerName,
+                opt => opt.MapFrom(src => src.Owner.Username)
             );
 
         CreateMap<PhotoUploadRequest, Photo>()
