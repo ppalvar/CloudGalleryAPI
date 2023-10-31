@@ -3,17 +3,17 @@ namespace Infraestructure.Services;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Application.Models;
-using Application.Pipelines;
+using Application.Pipelines.Interfaces;
 using Application.Services.Interfaces;
 using Infraestructure.DbContexts;
 using Microsoft.EntityFrameworkCore;
 
 public class PhotoService : IPhotoService
 {
-    private readonly PhotoProcessingPipeline photoProcessingPipeline;
+    private readonly IPhotoProcessingPipeline photoProcessingPipeline;
     private readonly CloudGalleryDbContext dbContext;
 
-    public PhotoService(PhotoProcessingPipeline photoProcessingPipeline, CloudGalleryDbContext dbContext)
+    public PhotoService(IPhotoProcessingPipeline photoProcessingPipeline, CloudGalleryDbContext dbContext)
     {
         this.photoProcessingPipeline = photoProcessingPipeline;
         this.dbContext = dbContext;
@@ -85,9 +85,9 @@ public class PhotoService : IPhotoService
             Id = last.Id + 1;
         }
 
-            success = await photoProcessingPipeline.ProccessAndUpload(photoFile, Id.ToString());
         try
         {
+            success = await photoProcessingPipeline.ProccessAndUpload(photoFile, Id.ToString());
         }
         catch
         {

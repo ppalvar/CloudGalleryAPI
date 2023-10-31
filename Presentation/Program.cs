@@ -1,5 +1,6 @@
 using Application.ExternalServices.Interfaces;
 using Application.Pipelines;
+using Application.Pipelines.Interfaces;
 using Application.Services.Interfaces;
 using FluentValidation;
 using Infraestructure.DbContexts;
@@ -36,7 +37,7 @@ builder.Services.AddScoped<UserRegisterValidator>();
     builder.Services.AddScoped<IFileEncryptService, FileEncryptServiceMock>();
     builder.Services.AddScoped<IPhotoStorageService, PhotoStorageServiceLocal>();
 
-    builder.Services.AddScoped<PhotoProcessingPipeline>();
+    builder.Services.AddScoped<IPhotoProcessingPipeline, PhotoProcessingPipeline>();
 }
 
 //Add services

@@ -1,8 +1,9 @@
 using Application.ExternalServices.Interfaces;
+using Application.Pipelines.Interfaces;
 
 namespace Application.Pipelines;
 
-public class PhotoProcessingPipeline
+public class PhotoProcessingPipeline : IPhotoProcessingPipeline
 {
     private readonly IVirusScannerService virusScannerService;
     private readonly IThumbnailGenerationService thumbnailGenerationService;
@@ -10,7 +11,10 @@ public class PhotoProcessingPipeline
     private readonly IFileEncryptService fileEncryptService;
 
 
-    public PhotoProcessingPipeline(IVirusScannerService virusScannerService, IThumbnailGenerationService thumbnailGenerationService, IPhotoStorageService photoStorageService, IFileEncryptService fileEncryptService)
+    public PhotoProcessingPipeline(IVirusScannerService virusScannerService,
+                                   IThumbnailGenerationService thumbnailGenerationService,
+                                   IPhotoStorageService photoStorageService,
+                                   IFileEncryptService fileEncryptService)
     {
         this.virusScannerService = virusScannerService;
         this.thumbnailGenerationService = thumbnailGenerationService;
